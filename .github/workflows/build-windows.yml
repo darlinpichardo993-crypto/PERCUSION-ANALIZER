@@ -1,0 +1,63 @@
+name: Build PERCUSSION ANALIZER (Windows)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure
+        run: cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release
+
+      - name: Compile VST3
+        run: cmake --build build --config Release --parallel 2
+
+      - name: Verify VST3 bundle exists
+        shell: pwsh
+        run: |
+          $plugin = "build/PercussionAnalizer_artefacts/Release/VST3/PERCUSSION ANALIZER.vst3"
+          if (!(Test-Path $plugin)) {
+            Get-ChildItem build -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+            throw "VST3 bundle not found at expected path: $plugin"
+          }
+
+      - name: Create manual VST3 ZIP
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path "build/PercussionAnalizer_artefacts/Release/VST3/PERCUSSION ANALIZER.vst3" -DestinationPath "dist/PERCUSSION_ANALIZER_VST3_manual.zip" -Force
+
+      - name: Install Inno Setup
+        run: choco install innosetup --yes --no-progress
+
+      - name: Build branded installer
+        shell: pwsh
+        run: |
+          & "C:\\Program Files (x86)\\Inno Setup 6\\ISCC.exe" "installer/setup.iss"
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed with exit code $LASTEXITCODE" }
+          if (!(Test-Path "dist/PERCUSSION_ANALIZER_Setup.exe")) { throw "Installer EXE was not generated" }
+
+      - name: Upload installers and plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: PERCUSSION_ANALIZER_Windows
+          path: |
+            dist/PERCUSSION_ANALIZER_Setup.exe
+            dist/PERCUSSION_ANALIZER_VST3_manual.zip
+          if-no-files-found: error
+          retention-days: 30
