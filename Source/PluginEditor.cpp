@@ -75,6 +75,10 @@ void drawPlate(juce::Graphics& g, juce::Rectangle<int> r, Colour top, Colour bot
 
 }
 
+// These aliases must also be visible outside the anonymous helper namespace.
+using juce::Colour;
+using juce::Colours;
+
 //==============================================================================
 RealLookAndFeel::RealLookAndFeel()
 {
