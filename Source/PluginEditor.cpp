@@ -4,7 +4,7 @@
 namespace
 {
 using juce::Colour;
-using juce::Colours;
+namespace Colours = juce::Colours;
 
 void drawScrew(juce::Graphics& g, float cx, float cy, float r, juce::Random& rnd)
 {
@@ -77,7 +77,7 @@ void drawPlate(juce::Graphics& g, juce::Rectangle<int> r, Colour top, Colour bot
 
 // These aliases must also be visible outside the anonymous helper namespace.
 using juce::Colour;
-using juce::Colours;
+namespace Colours = juce::Colours;
 
 //==============================================================================
 RealLookAndFeel::RealLookAndFeel()
