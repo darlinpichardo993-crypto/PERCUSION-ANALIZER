@@ -360,7 +360,9 @@ void PercussionAnalizerAudioProcessor::processBlock(juce::AudioBuffer<float>& bu
 
     // ---- 11. makeup + salida + mezcla + limitador
     const float outGain = juce::Decibels::decibelsToGain(readParam(pMakeup) + readParam(pOutput));
-    buffer.applyGainRamp(0, n, lastOutGain, outGain);
+    // Apply the output gain to every active channel (not just the left channel).
+    for (int c = 0; c < numCh; ++c)
+        buffer.applyGainRamp(c, 0, n, lastOutGain, outGain);
     lastOutGain = outGain;
 
     mixer.setWetMixProportion(readParam(pMix) / 100.f);
